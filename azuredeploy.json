@@ -27,7 +27,7 @@
             ]
         },
         "skuName": {
-            "defaultValue": "S1",
+            "defaultValue": "P2V2",
             "allowedValues": [
                 "B1",
                 "B2",
@@ -35,10 +35,9 @@
                 "S1",
                 "S2",
                 "S3",
-                "P1",
-                "P2",
-                "P3",
-                "P4"
+                "P1V2",
+                "P2V2",
+                "P3V2"
             ],
             "type": "string"
         },
@@ -71,47 +70,29 @@
             "properties": {
                 "name": "[parameters('siteName')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
-                "clientAffinityEnabled": false,
+                "siteConfig": {
+		  "use32BitWorkerProcess": false,
+		  "alwaysOn": true,
+		  "http20Enabled": true,
+		  "javaVersion": "1.8",
+		  "javaContainer": "TOMCAT",
+		  "javaContainerVersion": "9.0"
+		},
+		"clientAffinityEnabled": false,
+                "httpsOnly": "[parameters('httpsOnly')]",
                 "siteConfig": {
                     "appSettings": [
                         {
-                            "name": "solrVersion",
+                            "name": "SolrVersion",
                             "value": "[parameters('solrVersion')]"
+                        },
+                        {
+                            "name": "WEBSITE_DISABLE_OVERLAPPED_RECYCLING",
+                            "value": "1"
                         }
                     ]
-                },
-                "httpsOnly": "[parameters('httpsOnly')]"
-            },
-            "resources": [
-                {
-                    "name": "web",
-                    "type": "config",
-                    "apiVersion": "2016-08-01",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', parameters('siteName'))]"
-                    ],
-                    "properties": {
-                        "alwaysOn": true,
-                        "javaVersion": "1.8",
-                        "javaContainer": "TOMCAT",
-                        "javaContainerVersion": "9.0"
-                    }
-                },
-                {
-                    "apiVersion": "2016-08-01",
-                    "name": "web",
-                    "type": "sourcecontrols",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
-                        "[concat('Microsoft.Web/Sites/', parameters('siteName'), '/config/web')]"
-                    ],
-                    "properties": {
-                        "RepoUrl": "https://github.com/jraps20/Solr-AzureAppService",
-                        "branch": "Sitecore",
-                        "IsManualIntegration": true
-                    }
                 }
-            ]
+            }
         }
     ]
 }
