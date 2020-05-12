@@ -58,21 +58,17 @@ $xml.DocumentElement.AppendChild($field)
 $xml.Save($path)
 
 $sitecoreCores = @(
-	"sitecore_analytics_index", 
     "sitecore_core_index", 
     "sitecore_fxm_master_index", 
-	"sitecore_fxm_web_index", 
-	"sitecore_list_index", 
+    "sitecore_fxm_web_index", 
     "sitecore_marketing_asset_index_master", 
     "sitecore_marketing_asset_index_web", 
-	"sitecore_marketingdefinitions_master", 
-	"sitecore_marketingdefinitions_web", 
+    "sitecore_marketingdefinitions_master", 
+    "sitecore_marketingdefinitions_web", 
     "sitecore_master_index", 
-	"sitecore_suggested_test_index", 
-	"sitecore_testing_index", 
-	"sitecore_web_index", 
-    "social_messages_master", 
-	"social_messages_web"
+    "sitecore_suggested_test_index", 
+    "sitecore_testing_index", 
+    "sitecore_web_index"
 )
 
 foreach ($coreName in $sitecoreCores) {
@@ -86,7 +82,7 @@ foreach ($coreName in $sitecoreCores) {
 
 $xdbCores = @(
 	"xdb", 
-    "xdb_rebuild"
+        "xdb_rebuild"
 )
 
 foreach ($coreName in $xdbCores) {
