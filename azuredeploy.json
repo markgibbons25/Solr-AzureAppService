@@ -1,98 +1,124 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "hostingPlanName": {
-            "type": "string",
-            "minLength": 1,
-            "defaultValue": "SolrAppServicePlan"
-        },
-        "siteLocation": {
-            "type": "string",
-            "defaultValue": "East US 2"
-        },
-        "siteName": {
-            "type": "string",
-            "defaultValue": "SolrAppService"
-        },
-        "solrVersion": {
-            "type": "string",
-			"allowedValues": [
-                "6.6.1",
-				"6.6.2",
-                "6.6.3",
-                "7.2.1",
-                "7.5.0",
-				"8.1.1"
-            ]
-        },
-        "skuName": {
-            "defaultValue": "P2V2",
-            "allowedValues": [
-                "B1",
-                "B2",
-                "B3",
-                "S1",
-                "S2",
-                "S3",
-                "P1V2",
-                "P2V2",
-                "P3V2"
-            ],
-            "type": "string"
-        },
-        "httpsOnly": {
-            "type": "bool",
-            "defaultValue": true
-        }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "hostingPlanName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SolrAppServicePlan"
     },
-    "resources": [
-        {
-            "apiVersion": "2016-09-01",
-            "name": "[parameters('hostingPlanName')]",
-            "type": "Microsoft.Web/serverfarms",
-            "location": "[parameters('siteLocation')]",
-            "sku": {
-                "name": "[parameters('skuName')]"
+    "siteLocation": {
+      "type": "string",
+      "defaultValue": "East US 2"
+    },
+    "siteName": {
+      "type": "string",
+      "defaultValue": "SolrAppService"
+    },
+    "solrVersion": {
+      "type": "string",
+      "allowedValues": [
+        "6.6.1",
+        "6.6.2",
+        "6.6.3",
+        "7.2.1",
+        "7.5.0",
+        "8.1.1"
+      ]
+    },
+    "skuName": {
+      "defaultValue": "P2V2",
+      "allowedValues": [
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1V2",
+        "P2V2",
+        "P3V2"
+      ],
+      "type": "string"
+    },
+    "httpsOnly": {
+      "type": "bool",
+      "defaultValue": true
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-09-01",
+      "name": "[parameters('hostingPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[parameters('siteLocation')]",
+      "sku": {
+        "name": "[parameters('skuName')]"
+      },
+      "properties": {
+        "name": "[parameters('hostingPlanName')]"
+      }
+    },
+    {
+      "apiVersion": "2016-08-01",
+      "name": "[parameters('siteName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[parameters('siteLocation')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]"
+      ],
+      "properties": {
+        "name": "[parameters('siteName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "clientAffinityEnabled": false,
+        "httpsOnly": "[parameters('httpsOnly')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "SolrVersion",
+              "value": "[parameters('solrVersion')]"
             },
-            "properties": {
-                "name": "[parameters('hostingPlanName')]"
+            {
+              "name": "WEBSITE_DISABLE_OVERLAPPED_RECYCLING",
+              "value": "1"
             }
+          ]
+        }
+      },
+
+      "resources": [
+        {
+          "name": "web",
+          "type": "config",
+          "apiVersion": "2016-08-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('siteName'))]"
+          ],
+          "properties": {
+            "use32BitWorkerProcess": false,
+            "webSocketsEnabled": false,
+            "alwaysOn": true,
+            "http20Enabled": true,
+            "javaVersion": "1.8",
+            "javaContainer": "JETTY",
+            "javaContainerVersion": "9.3"
+          }
         },
         {
-            "apiVersion": "2016-08-01",
-            "name": "[parameters('siteName')]",
-            "type": "Microsoft.Web/sites",
-            "location": "[parameters('siteLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]"
-            ],
-            "properties": {
-                "name": "[parameters('siteName')]",
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
-                "siteConfig": {
-		  "use32BitWorkerProcess": false,
-		  "alwaysOn": true,
-		  "http20Enabled": true,
-		  "javaVersion": "1.8",
-		  "javaContainer": "TOMCAT",
-		  "javaContainerVersion": "9.0"
-		},
-		"clientAffinityEnabled": false,
-                "httpsOnly": "[parameters('httpsOnly')]",
-                "siteConfig": {
-                    "appSettings": [
-                        {
-                            "name": "SolrVersion",
-                            "value": "[parameters('solrVersion')]"
-                        },
-                        {
-                            "name": "WEBSITE_DISABLE_OVERLAPPED_RECYCLING",
-                            "value": "1"
-                        }
-                    ]
-                }
-            }
+          "apiVersion": "2016-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
+            "[concat('Microsoft.Web/Sites/', parameters('siteName'), '/config/web')]"
+          ],
+          "properties": {
+            "RepoUrl": "https://github.com/markgibbons25/Solr-AzureAppService",
+            "branch": "Sitecore",
+            "IsManualIntegration": true
+          }
         }
-    ]
+      ]
+    }
+  ]
 }
